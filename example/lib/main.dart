@@ -7,7 +7,6 @@ import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-
 import 'package:geofencing/geofencing.dart';
 
 void main() => runApp(MyApp());
@@ -20,28 +19,17 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String geofenceState = 'N/A';
   List<String> registeredGeofences = [];
-  double latitude = 37.419851;
-  double longitude = -122.078818;
+  double latitude = 48.14571025152596;
+  double longitude = 11.587476194587186;
   double radius = 150.0;
   ReceivePort port = ReceivePort();
-  final List<GeofenceEvent> triggers = <GeofenceEvent>[
-    GeofenceEvent.enter,
-    GeofenceEvent.dwell,
-    GeofenceEvent.exit
-  ];
-  final AndroidGeofencingSettings androidSettings = AndroidGeofencingSettings(
-      initialTrigger: <GeofenceEvent>[
-        GeofenceEvent.enter,
-        GeofenceEvent.exit,
-        GeofenceEvent.dwell
-      ],
-      loiteringDelay: 1000 * 60);
+  final List<GeofenceEvent> triggers = <GeofenceEvent>[GeofenceEvent.enter, GeofenceEvent.exit];
+  final AndroidGeofencingSettings androidSettings = AndroidGeofencingSettings(initialTrigger: <GeofenceEvent>[GeofenceEvent.enter, GeofenceEvent.exit]);
 
   @override
   void initState() {
     super.initState();
-    IsolateNameServer.registerPortWithName(
-        port.sendPort, 'geofencing_send_port');
+    IsolateNameServer.registerPortWithName(port.sendPort, 'geofencing_send_port');
     port.listen((dynamic data) {
       print('Event: $data');
       setState(() {
@@ -53,8 +41,7 @@ class _MyAppState extends State<MyApp> {
 
   static void callback(List<String> ids, Location l, GeofenceEvent e) async {
     print('Fences: $ids Location $l Event: $e');
-    final SendPort send =
-    IsolateNameServer.lookupPortByName('geofencing_send_port');
+    final SendPort? send = IsolateNameServer.lookupPortByName('geofencing_send_port');
     send?.send(e.toString());
   }
 
@@ -63,17 +50,6 @@ class _MyAppState extends State<MyApp> {
     print('Initializing...');
     await GeofencingManager.initialize();
     print('Initialization done');
-  }
-
-  String numberValidator(String value) {
-    if (value == null) {
-      return null;
-    }
-    final num a = num.tryParse(value);
-    if (a == null) {
-      return '"$value" is not a valid number';
-    }
-    return null;
   }
 
   @override
@@ -85,80 +61,67 @@ class _MyAppState extends State<MyApp> {
           ),
           body: Container(
               padding: const EdgeInsets.all(20.0),
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text('Current state: $geofenceState'),
-                    Center(
-                      child: RaisedButton(
-                        child: const Text('Register'),
-                        onPressed: () {
-                          if (latitude == null) {
-                            setState(() => latitude = 0.0);
-                          }
-                          if (longitude == null) {
-                            setState(() => longitude = 0.0);
-                          }
-                          if (radius == null) {
-                            setState(() => radius = 0.0);
-                          }
-                          GeofencingManager.registerGeofence(
-                              GeofenceRegion(
-                                  'mtv', latitude, longitude, radius, triggers,
-                                  androidSettings: androidSettings),
-                              callback).then((_) {
-                            GeofencingManager.getRegisteredGeofenceIds().then((value) {
-                              setState(() {
-                                registeredGeofences = value;
-                              });
-                            });
+              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+                Text('Current state: $geofenceState'),
+                Center(
+                  child: ElevatedButton(
+                    child: const Text('Register'),
+                    onPressed: () {
+                      GeofencingManager.registerGeofence(
+                              GeofenceRegion('mtv', latitude, longitude, radius, triggers, androidSettings: androidSettings), callback)
+                          .then((_) {
+                        GeofencingManager.getRegisteredGeofenceIds().then((value) {
+                          setState(() {
+                            registeredGeofences = value;
                           });
-                        },
-                      ),
-                    ),
-                    Text('Registered Geofences: $registeredGeofences'),
-                    Center(
-                      child: RaisedButton(
-                        child: const Text('Unregister'),
-                        onPressed: () =>
-                            GeofencingManager.removeGeofenceById('mtv').then((_) {
-                              GeofencingManager.getRegisteredGeofenceIds().then((value){
-                                setState(() {
-                                  registeredGeofences = value;
-                                });
-                              });
-                            }),
-                      ),
-                    ),
-                    TextField(
-                      decoration: const InputDecoration(
-                        hintText: 'Latitude',
-                      ),
-                      keyboardType: TextInputType.number,
-                      controller:
-                      TextEditingController(text: latitude.toString()),
-                      onChanged: (String s) {
-                        latitude = double.tryParse(s);
-                      },
-                    ),
-                    TextField(
-                        decoration:
-                        const InputDecoration(hintText: 'Longitude'),
-                        keyboardType: TextInputType.number,
-                        controller:
-                        TextEditingController(text: longitude.toString()),
-                        onChanged: (String s) {
-                          longitude = double.tryParse(s);
-                        }),
-                    TextField(
-                        decoration: const InputDecoration(hintText: 'Radius'),
-                        keyboardType: TextInputType.number,
-                        controller:
-                        TextEditingController(text: radius.toString()),
-                        onChanged: (String s) {
-                          radius = double.tryParse(s);
-                        }),
-                  ]))),
+                        });
+                      });
+                      setState(() {
+                        latitude = 0.0;
+                        longitude = 0.0;
+                        radius = 0.0;
+                      });
+                    },
+                  ),
+                ),
+                Text('Registered Geofences: $registeredGeofences'),
+                Center(
+                  child: ElevatedButton(
+                    child: const Text('Unregister'),
+                    onPressed: () => GeofencingManager.removeGeofenceById('mtv').then((_) {
+                      GeofencingManager.getRegisteredGeofenceIds().then((value) {
+                        setState(() {
+                          registeredGeofences = value;
+                        });
+                      });
+                    }),
+                  ),
+                ),
+                TextField(
+                  decoration: const InputDecoration(
+                    hintText: 'Latitude',
+                  ),
+                  keyboardType: TextInputType.number,
+                  controller: TextEditingController(text: latitude.toString()),
+                  onChanged: (String s) {
+                    latitude = double.tryParse(s) ?? 0;
+                  },
+                ),
+                TextField(
+                    decoration: const InputDecoration(hintText: 'Longitude'),
+                    keyboardType: TextInputType.number,
+                    controller: TextEditingController(text: longitude.toString()),
+                    onChanged: (String s) {
+                      longitude = double.tryParse(s) ?? 0;
+                    }),
+                TextField(
+                    decoration: const InputDecoration(hintText: 'Radius'),
+                    keyboardType: TextInputType.number,
+                    controller: TextEditingController(text: radius.toString()),
+                    onChanged: (String s) {
+                      radius = double.tryParse(s) ?? 0;
+                    }),
+              ]))),
     );
   }
 }
