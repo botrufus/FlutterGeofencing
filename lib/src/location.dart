@@ -19,4 +19,10 @@ class Location {
 
   @override
   String toString() => '($latitude, $longitude)';
+
+  Location.fromJson(Map<String, dynamic> json)
+      : latitude = json['latitude'],
+        longitude = json['longitude'];
+
+  Map<String, dynamic> toJson() => {'latitude': latitude, 'longitude': longitude};
 }
