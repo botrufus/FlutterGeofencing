@@ -49,6 +49,7 @@ class GeofencingPlugin : ActivityAware, FlutterPlugin, MethodCallHandler {
 
     @JvmStatic
     fun reRegisterAfterReboot(context: Context) {
+      Log.d(TAG, "ReRegistering after reboot")
       synchronized(sGeofenceCacheLock) {
         var p = context.getSharedPreferences(SHARED_PREFERENCES_KEY, Context.MODE_PRIVATE)
         var persistentGeofences = p.getStringSet(PERSISTENT_GEOFENCES_IDS, null)
@@ -77,6 +78,7 @@ class GeofencingPlugin : ActivityAware, FlutterPlugin, MethodCallHandler {
                                  args: ArrayList<*>?,
                                  result: Result?,
                                  cache: Boolean) {
+      Log.d(TAG, "Registering geofence")
       val callbackHandle = args!![0] as Long
       val id = args[1] as String
       val lat = args[2] as Double
@@ -105,7 +107,7 @@ class GeofencingPlugin : ActivityAware, FlutterPlugin, MethodCallHandler {
       geofencingClient.addGeofences(getGeofencingRequest(geofence, initialTriggers),
               getGeofencePendingIndent(context, callbackHandle))?.run {
         addOnSuccessListener {
-          Log.i(TAG, "Successfully added geofence")
+          Log.i(TAG, "Successfully added geofence at lat: $lat, long: $long")
           if (cache) {
             addGeofenceToCache(context, id, args)
           }
@@ -173,6 +175,7 @@ class GeofencingPlugin : ActivityAware, FlutterPlugin, MethodCallHandler {
                                geofencingClient: GeofencingClient,
                                args: ArrayList<*>?,
                                result: Result) {
+      Log.d(TAG, "Removing geofence")
       val ids = listOf(args!![0] as String)
       geofencingClient.removeGeofences(ids).run {
         addOnSuccessListener {

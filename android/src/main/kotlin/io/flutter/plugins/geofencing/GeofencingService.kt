@@ -126,8 +126,8 @@ class GeofencingService : MethodCallHandler, JobIntentService() {
     override fun onHandleWork(intent: Intent) {
         val callbackHandle = intent.getLongExtra(GeofencingPlugin.CALLBACK_HANDLE_KEY, 0)
         val geofencingEvent = GeofencingEvent.fromIntent(intent)
-        if (geofencingEvent.hasError()) {
-            Log.e(TAG, "Geofencing error: ${geofencingEvent.errorCode}")
+        if (geofencingEvent == null || geofencingEvent.hasError()) {
+            Log.e(TAG, "Geofencing error: ${geofencingEvent?.errorCode}")
             return
         }
 
@@ -136,18 +136,24 @@ class GeofencingService : MethodCallHandler, JobIntentService() {
 
         // Get the geofences that were triggered. A single event can trigger
         // multiple geofences.
-        val triggeringGeofences = geofencingEvent.triggeringGeofences.map {
+        val triggeringGeofences = geofencingEvent.triggeringGeofences?.map {
             it.requestId
         }
 
+        if (triggeringGeofences == null) {
+            Log.e(TAG, "No triggering geofences found. Skipping.")
+            return
+        }
+
         val location = geofencingEvent.triggeringLocation
-        val locationList = listOf(location.latitude,
-                location.longitude)
+        val locationList = listOf(location?.latitude,
+                location?.longitude)
         val geofenceUpdateList = listOf(callbackHandle,
                 triggeringGeofences,
                 locationList,
                 geofenceTransition)
 
+        Log.d(TAG, "Geofences trigerred: $triggeringGeofences")
         synchronized(sServiceStarted) {
             if (!sServiceStarted.get()) {
                 // Queue up geofencing events while background isolate is starting
