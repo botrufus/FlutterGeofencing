@@ -16,15 +16,30 @@ import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
+import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
-import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.MethodCall
-import io.flutter.plugin.common.PluginRegistry.Registrar
 import org.json.JSONArray
+
+
+class LongUtils {
+  companion object {
+    fun parseLong(input: Any?): Long? {
+      if (input is Int) {
+        return input.toLong()
+      }
+      if (input is Long) {
+        return input
+      }
+      return null
+    }
+  }
+}
+
 
 class GeofencingPlugin : ActivityAware, FlutterPlugin, MethodCallHandler {
   private var mContext : Context? = null
@@ -86,7 +101,7 @@ class GeofencingPlugin : ActivityAware, FlutterPlugin, MethodCallHandler {
       val radius = (args[4] as Number).toFloat()
       val fenceTriggers = args[5] as Int
       val initialTriggers = args[6] as Int
-      val expirationDuration = (args[7] as Int).toLong()
+      val expirationDuration = LongUtils.parseLong(args[7])!!
       val loiteringDelay = args[8] as Int
       val notificationResponsiveness = args[9] as Int
       val geofence = Geofence.Builder()
